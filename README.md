@@ -1,75 +1,51 @@
-# Nuxt Minimal Starter
+# Phrasé
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+Learn the phrases people actually say, grouped by situation rather than word by word.
 
-## Setup
+Aimed at B2+ learners whose gap isn't grammar or vocabulary but fluency: knowing
+*a* way to say something, yet not the natural one, fast enough for a real
+conversation. Each card is a full contextual sentence, not an isolated word.
 
-Make sure to install dependencies:
+## How it works
+
+- **Contexts** — phrases grouped by situation (asking for directions, on a call,
+  hedging an opinion…), not by grammatical category.
+- **Two review modes** — *recognition* reveals the answer, *production* asks you
+  to type the target sentence. Production is the default: recognising a phrase
+  doesn't mean you can produce it under pressure.
+- **Leitner spaced repetition** — three boxes with 0/2/7-day intervals. A missed
+  phrase returns later in the same session instead of ending it.
+- **Answer checking** — case, punctuation and diacritics are ignored, and typos
+  within two characters count as correct. A word-level diff highlights only what
+  was actually missed. Accents are dropped deliberately: a French keyboard can't
+  reasonably produce `á`, `ñ` or `¿`, and the exercise tests the language, not
+  the keyboard.
+- **Language packs** — French → English and French → Spanish, each with its own
+  progress. Adding a pack means adding content, not changing code.
+
+Progress is stored in `localStorage`; there is no backend and no account.
+
+## Stack
+
+Nuxt 4, TypeScript, Pinia, UnoCSS, `@nuxt/fonts`. Speech uses the browser's
+built-in Web Speech API, so audio costs nothing and needs no network call.
+
+## Development
 
 ```bash
-# npm
-npm install
-
-# pnpm
 pnpm install
-
-# yarn
-yarn install
-
-# bun
-bun install
 ```
 
-## Development Server
-
-Start the development server on `http://localhost:3000`:
-
 ```bash
-# npm
-npm run dev
-
-# pnpm
 pnpm dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
 ```
 
-## Production
-
-Build the application for production:
-
 ```bash
-# npm
-npm run build
-
-# pnpm
 pnpm build
-
-# yarn
-yarn build
-
-# bun
-bun run build
 ```
 
-Locally preview production build:
+## Adding content
 
-```bash
-# npm
-npm run preview
-
-# pnpm
-pnpm preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
-```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+Phrases live in `app/data/phrases/<langPackId>/<context>.ts`. Add entries there,
+register any new context in `app/data/contexts.ts`, and a new language pack in
+`app/data/langPacks.ts`. Phrase ids must be unique across every pack.

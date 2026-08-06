@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { APP_NAME } from '~/constants/app'
+
 const colorMode = useColorMode()
 const store = useReviewStore()
 const { langPack, langPacks } = useLangPack()
@@ -15,7 +17,7 @@ onMounted(() => store.load())
     <NuxtRouteAnnouncer />
     <header class="max-w-2xl mx-auto flex items-center justify-between gap-4 px-4 py-6">
       <NuxtLink to="/" class="font-heading text-xl font-semibold">
-        {{ langPack.title }}
+        {{ APP_NAME }}
       </NuxtLink>
 
       <div class="flex items-center gap-2">

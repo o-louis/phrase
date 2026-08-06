@@ -1,10 +1,19 @@
+import { APP_NAME } from './app/constants/app'
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   app: {
     head: {
-      htmlAttrs: { lang: 'fr' }
+      htmlAttrs: { lang: 'fr' },
+      title: APP_NAME,
+      meta: [
+        {
+          name: 'description',
+          content: 'Apprendre les tournures qu\'on utilise vraiment, par situation plutôt que mot à mot.'
+        }
+      ]
     }
   },
   modules: ['@pinia/nuxt', '@unocss/nuxt', '@nuxtjs/color-mode', '@nuxt/fonts'],
