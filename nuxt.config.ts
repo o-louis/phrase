@@ -2,6 +2,11 @@
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
+  app: {
+    head: {
+      htmlAttrs: { lang: 'fr' }
+    }
+  },
   modules: ['@pinia/nuxt', '@unocss/nuxt', '@nuxtjs/color-mode', '@nuxt/fonts'],
   colorMode: {
     classSuffix: '',

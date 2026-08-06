@@ -32,7 +32,7 @@ onMounted(() => store.load())
 <template>
   <div class="max-w-2xl mx-auto flex flex-col gap-4">
     <NuxtLink to="/" class="text-muted hover:text-accent w-fit flex items-center gap-1">
-      <span class="inline-block i-ph-arrow-left" /> Back
+      <span class="inline-block i-ph-arrow-left" /> Retour
     </NuxtLink>
 
     <div class="flex items-center justify-between gap-4">
@@ -45,7 +45,7 @@ onMounted(() => store.load())
         :to="`/review?context=${contextId}`"
         class="shrink-0 px-4 py-2 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent-hover transition-colors"
       >
-        Review {{ dueCount }}
+        Réviser {{ dueCount }}
       </NuxtLink>
     </div>
 
@@ -68,7 +68,7 @@ onMounted(() => store.load())
         </p>
         <button
           class="shrink-0 p-2 rounded-full hover:bg-bg transition-colors"
-          aria-label="Play pronunciation"
+          aria-label="Écouter la prononciation"
           @click.stop="speak(phrase.target)"
         >
           <span class="inline-block i-ph-speaker-high text-xl" />

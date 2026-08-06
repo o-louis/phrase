@@ -16,7 +16,7 @@ function toggleColorMode() {
       <ClientOnly>
         <button
           class="p-2 rounded-full hover:bg-surface transition-colors"
-          aria-label="Toggle color mode"
+          aria-label="Changer de thème"
           @click="toggleColorMode"
         >
           <span :class="colorMode.value === 'dark' ? 'i-ph-sun' : 'i-ph-moon'" class="inline-block text-xl" />

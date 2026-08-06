@@ -75,12 +75,12 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
       :to="contextId ? `/context/${contextId}` : '/'"
       class="text-muted hover:text-accent w-fit flex items-center gap-1"
     >
-      <span class="inline-block i-ph-arrow-left" /> Back
+      <span class="inline-block i-ph-arrow-left" /> Retour
     </NuxtLink>
 
     <div v-if="mounted && total" class="flex flex-col gap-2">
       <div class="flex items-center justify-between text-sm text-muted">
-        <span>{{ context ? context.label : 'All contexts' }}</span>
+        <span>{{ context ? context.label : 'Tous les contextes' }}</span>
         <span>{{ done }} / {{ total }}</span>
       </div>
       <div class="h-1.5 rounded-full bg-border overflow-hidden">
@@ -103,7 +103,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
         </p>
         <button
           class="shrink-0 p-2 rounded-full hover:bg-bg transition-colors"
-          aria-label="Play pronunciation"
+          aria-label="Écouter la prononciation"
           @click="speak(current.target)"
         >
           <span class="inline-block i-ph-speaker-high text-xl" />
@@ -116,20 +116,20 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
           class="w-full py-3 rounded-lg bg-accent text-white font-medium hover:bg-accent-hover transition-colors"
           @click="reveal"
         >
-          Show answer
+          Voir la réponse
         </button>
         <div v-else class="grid grid-cols-2 gap-3">
           <button
             class="py-3 rounded-lg border border-border hover:border-accent transition-colors"
             @click="answer(false)"
           >
-            Didn't know
+            Je ne savais pas
           </button>
           <button
             class="py-3 rounded-lg bg-box-3 text-white font-medium hover:opacity-90 transition-opacity"
             @click="answer(true)"
           >
-            Knew it
+            Je savais
           </button>
         </div>
       </div>
@@ -139,13 +139,13 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
     <div v-else-if="mounted && total" class="card p-8 flex flex-col items-center gap-3 text-center">
       <span class="inline-block i-ph-check-circle text-4xl text-box-3" />
       <p class="font-heading text-xl">
-        Session complete
+        Session terminée
       </p>
       <p class="text-muted">
-        {{ total }} {{ total > 1 ? 'phrases' : 'phrase' }} reviewed.
+        {{ total }} {{ total > 1 ? 'phrases révisées' : 'phrase révisée' }}.
       </p>
       <NuxtLink to="/" class="mt-2 px-4 py-2 rounded-lg bg-accent text-white hover:bg-accent-hover transition-colors">
-        Back to contexts
+        Retour aux contextes
       </NuxtLink>
     </div>
 
@@ -153,15 +153,15 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
     <div v-else-if="mounted" class="card p-8 flex flex-col items-center gap-3 text-center">
       <span class="inline-block i-ph-coffee text-4xl text-muted" />
       <p class="font-heading text-xl">
-        All caught up
+        Tout est à jour
       </p>
       <p class="text-muted">
-        Nothing to review right now. Come back later.
+        Rien à réviser pour le moment. Reviens plus tard.
       </p>
     </div>
 
     <p v-if="current" class="text-center text-xs text-muted">
-      Space to reveal · 1 didn't know · 2 knew it
+      Espace pour révéler · 1 je ne savais pas · 2 je savais
     </p>
   </div>
 </template>
