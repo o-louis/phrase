@@ -1,10 +1,12 @@
 import { defineConfig, presetIcons, presetWind3 } from 'unocss'
+import { contexts } from './app/data/contexts'
 
 export default defineConfig({
   presets: [
     presetWind3(),
     presetIcons()
   ],
+  safelist: contexts.map(context => context.icon),
   theme: {
     colors: {
       bg: 'var(--color-bg)',
