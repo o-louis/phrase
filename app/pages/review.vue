@@ -2,6 +2,8 @@
 import { contexts } from '~/data/contexts'
 import { phrases } from '~/data/phrases'
 import type { Phrase } from '~/types/content'
+import type { ReviewMode } from '~/types/review'
+import type { AnswerCheck } from '~/utils/answer'
 
 const route = useRoute()
 const store = useReviewStore()
@@ -14,10 +16,17 @@ const mounted = ref(false)
 const queue = ref<Phrase[]>([])
 const total = ref(0)
 const done = ref(0)
+
+const input = ref('')
+const result = ref<AnswerCheck | null>(null)
 const revealed = ref(false)
+const inputEl = ref<HTMLInputElement | null>(null)
 
 const current = computed(() => queue.value[0])
 const progress = computed(() => (total.value ? (done.value / total.value) * 100 : 0))
+const answered = computed(() => revealed.value || result.value !== null)
+// An answer that is right, or right apart from a typo, still counts as known.
+const gradedAsKnown = computed(() => result.value !== null && result.value.status !== 'incorrect')
 
 function shuffle<T>(items: T[]): T[] {
   const result = [...items]
@@ -28,31 +37,67 @@ function shuffle<T>(items: T[]): T[] {
   return result
 }
 
+function focusInput() {
+  nextTick(() => inputEl.value?.focus())
+}
+
+function setMode(next: ReviewMode) {
+  if (store.mode === next) return
+  store.setMode(next)
+  resetCard()
+}
+
+function resetCard() {
+  input.value = ''
+  result.value = null
+  revealed.value = false
+  if (store.mode === 'production') focusInput()
+}
+
 function reveal() {
-  if (revealed.value || !current.value) return
+  if (answered.value || !current.value) return
   revealed.value = true
+  speak(current.value.target)
+}
+
+function submit() {
+  if (answered.value || !current.value) return
+  result.value = checkAnswer(input.value, current.value.target)
+  speak(current.value.target)
+}
+
+/** Gives up on the current phrase: shows the answer and counts it as not known. */
+function giveUp() {
+  if (answered.value || !current.value) return
+  input.value = ''
+  result.value = checkAnswer('', current.value.target)
   speak(current.value.target)
 }
 
 function answer(known: boolean) {
   const phrase = current.value
-  if (!phrase || !revealed.value) return
+  if (!phrase || !answered.value) return
 
   store.grade(phrase.id, known)
   queue.value.shift()
   // A missed phrase comes back later in the same session instead of ending it.
   if (known) done.value++
   else queue.value.push(phrase)
-  revealed.value = false
+  resetCard()
 }
 
 function onKeydown(event: KeyboardEvent) {
+  const target = event.target as HTMLElement | null
+  if (target?.tagName === 'INPUT') return
+
   if (event.key === ' ' || event.key === 'Enter') {
     event.preventDefault()
-    revealed.value ? answer(true) : reveal()
+    if (answered.value) answer(store.mode === 'production' ? gradedAsKnown.value : true)
+    else if (store.mode === 'recognition') reveal()
+    else focusInput()
   }
-  else if (event.key === '1' && revealed.value) answer(false)
-  else if (event.key === '2' && revealed.value) answer(true)
+  else if (event.key === '1' && answered.value) answer(false)
+  else if (event.key === '2' && answered.value) answer(true)
 }
 
 onMounted(() => {
@@ -63,6 +108,7 @@ onMounted(() => {
   queue.value = shuffle(pool)
   total.value = pool.length
   mounted.value = true
+  if (store.mode === 'production') focusInput()
   window.addEventListener('keydown', onKeydown)
 })
 
@@ -78,16 +124,30 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
       <span class="inline-block i-ph-arrow-left" /> Retour
     </NuxtLink>
 
-    <div v-if="mounted && total" class="flex flex-col gap-2">
-      <div class="flex items-center justify-between text-sm text-muted">
-        <span>{{ context ? context.label : 'Tous les contextes' }}</span>
-        <span>{{ done }} / {{ total }}</span>
+    <div v-if="mounted && total" class="flex flex-col gap-3">
+      <div class="flex items-center justify-between gap-3">
+        <div class="flex rounded-lg border border-border p-0.5 text-sm">
+          <button
+            v-for="option in (['production', 'recognition'] as ReviewMode[])"
+            :key="option"
+            class="px-3 py-1 rounded-md transition-colors"
+            :class="store.mode === option ? 'bg-accent text-white' : 'text-muted hover:text-text'"
+            @click="setMode(option)"
+          >
+            {{ option === 'production' ? 'Écriture' : 'Reconnaissance' }}
+          </button>
+        </div>
+        <span class="text-sm text-muted">{{ done }} / {{ total }}</span>
       </div>
-      <div class="h-1.5 rounded-full bg-border overflow-hidden">
-        <div
-          class="h-full bg-accent transition-all duration-300"
-          :style="{ width: `${progress}%` }"
-        />
+
+      <div class="flex flex-col gap-2">
+        <span class="text-sm text-muted">{{ context ? context.label : 'Tous les contextes' }}</span>
+        <div class="h-1.5 rounded-full bg-border overflow-hidden">
+          <div
+            class="h-full bg-accent transition-all duration-300"
+            :style="{ width: `${progress}%` }"
+          />
+        </div>
       </div>
     </div>
 
@@ -97,28 +157,90 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
         {{ current.source }}
       </p>
 
-      <div v-if="revealed" class="flex items-start justify-between gap-3 pt-4 border-t border-border">
-        <p class="text-xl text-accent font-medium leading-snug">
-          {{ current.target }}
-        </p>
-        <button
-          class="shrink-0 p-2 rounded-full hover:bg-bg transition-colors"
-          aria-label="Écouter la prononciation"
-          @click="speak(current.target)"
+      <!-- Production: write the phrase -->
+      <form v-if="store.mode === 'production' && !answered" class="flex flex-col gap-3" @submit.prevent="submit">
+        <input
+          ref="inputEl"
+          v-model="input"
+          type="text"
+          autocomplete="off"
+          autocapitalize="off"
+          autocorrect="off"
+          spellcheck="false"
+          placeholder="Écris la phrase en anglais…"
+          class="w-full px-4 py-3 rounded-lg bg-bg border border-border focus:border-accent outline-none transition-colors"
         >
-          <span class="inline-block i-ph-speaker-high text-xl" />
-        </button>
+        <div class="flex gap-3">
+          <button
+            type="button"
+            class="px-4 py-3 rounded-lg border border-border text-muted hover:border-accent hover:text-text transition-colors"
+            @click="giveUp"
+          >
+            Je ne sais pas
+          </button>
+          <button
+            type="submit"
+            class="flex-1 py-3 rounded-lg bg-accent text-white font-medium hover:bg-accent-hover transition-colors"
+          >
+            Valider
+          </button>
+        </div>
+      </form>
+
+      <!-- Answer, with the words that were missed highlighted -->
+      <div v-if="answered" class="flex flex-col gap-4 pt-4 border-t border-border">
+        <div v-if="result" class="flex items-center gap-2 text-sm font-medium">
+          <span
+            :class="[
+              result.status === 'correct' ? 'i-ph-check-circle text-box-3' : '',
+              result.status === 'almost' ? 'i-ph-warning-circle text-box-2' : '',
+              result.status === 'incorrect' ? 'i-ph-x-circle text-muted' : ''
+            ]"
+            class="inline-block text-lg"
+          />
+          <span
+            :class="{
+              'text-box-3': result.status === 'correct',
+              'text-box-2': result.status === 'almost',
+              'text-muted': result.status === 'incorrect'
+            }"
+          >
+            {{ result.status === 'correct' ? 'Correct' : result.status === 'almost' ? 'Presque — une faute de frappe' : 'La bonne réponse' }}
+          </span>
+        </div>
+
+        <div class="flex items-start justify-between gap-3">
+          <p class="text-xl font-medium leading-snug">
+            <template v-if="result">
+              <span
+                v-for="(entry, index) in result.words"
+                :key="index"
+                :class="entry.matched ? 'text-accent' : 'text-box-2 underline decoration-wavy underline-offset-4'"
+              >{{ entry.word }}{{ index < result.words.length - 1 ? ' ' : '' }}</span>
+            </template>
+            <span v-else class="text-accent">{{ current.target }}</span>
+          </p>
+          <button
+            class="shrink-0 p-2 rounded-full hover:bg-bg transition-colors"
+            aria-label="Écouter la prononciation"
+            @click="speak(current.target)"
+          >
+            <span class="inline-block i-ph-speaker-high text-xl" />
+          </button>
+        </div>
       </div>
 
       <div class="mt-auto">
         <button
-          v-if="!revealed"
+          v-if="store.mode === 'recognition' && !answered"
           class="w-full py-3 rounded-lg bg-accent text-white font-medium hover:bg-accent-hover transition-colors"
           @click="reveal"
         >
           Voir la réponse
         </button>
-        <div v-else class="grid grid-cols-2 gap-3">
+
+        <!-- Recognition grades itself; production already knows, but lets a valid variant be kept. -->
+        <div v-else-if="answered && store.mode === 'recognition'" class="grid grid-cols-2 gap-3">
           <button
             class="py-3 rounded-lg border border-border hover:border-accent transition-colors"
             @click="answer(false)"
@@ -130,6 +252,22 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
             @click="answer(true)"
           >
             Je savais
+          </button>
+        </div>
+
+        <div v-else-if="answered" class="flex gap-3">
+          <button
+            v-if="!gradedAsKnown"
+            class="px-4 py-3 rounded-lg border border-border text-muted hover:border-accent hover:text-text transition-colors"
+            @click="answer(true)"
+          >
+            Compter comme correct
+          </button>
+          <button
+            class="flex-1 py-3 rounded-lg bg-accent text-white font-medium hover:bg-accent-hover transition-colors"
+            @click="answer(gradedAsKnown)"
+          >
+            Continuer
           </button>
         </div>
       </div>
@@ -161,7 +299,12 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
     </div>
 
     <p v-if="current" class="text-center text-xs text-muted">
-      Espace pour révéler · 1 je ne savais pas · 2 je savais
+      <template v-if="store.mode === 'production'">
+        Entrée pour valider{{ answered ? ' · Entrée pour continuer' : '' }}
+      </template>
+      <template v-else>
+        Espace pour révéler · 1 je ne savais pas · 2 je savais
+      </template>
     </p>
   </div>
 </template>

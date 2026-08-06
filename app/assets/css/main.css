@@ -24,10 +24,12 @@
   --color-box-3: #85ab77;
 }
 
-/* UnoCSS ships no Tailwind-style preflight, so border utilities need a base style to render. */
+/* UnoCSS ships no Tailwind-style preflight: without this, borders don't render
+   and `w-full` overflows its container once padding is added. */
 *,
 ::before,
 ::after {
+  box-sizing: border-box;
   border-width: 0;
   border-style: solid;
   border-color: var(--color-border);
