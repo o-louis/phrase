@@ -8,6 +8,8 @@
   --color-muted: #7a7266;
   --color-accent: #c1622f;
   --color-accent-hover: #a94f22;
+  --color-box-2: #c2952f;
+  --color-box-3: #6b8f5e;
 }
 
 .dark {
@@ -18,6 +20,17 @@
   --color-muted: #a39b8a;
   --color-accent: #e2814f;
   --color-accent-hover: #ee9569;
+  --color-box-2: #d9ad4a;
+  --color-box-3: #85ab77;
+}
+
+/* UnoCSS ships no Tailwind-style preflight, so border utilities need a base style to render. */
+*,
+::before,
+::after {
+  border-width: 0;
+  border-style: solid;
+  border-color: var(--color-border);
 }
 
 html,

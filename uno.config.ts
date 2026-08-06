@@ -15,7 +15,9 @@ export default defineConfig({
       text: 'var(--color-text)',
       muted: 'var(--color-muted)',
       accent: 'var(--color-accent)',
-      'accent-hover': 'var(--color-accent-hover)'
+      'accent-hover': 'var(--color-accent-hover)',
+      'box-2': 'var(--color-box-2)',
+      'box-3': 'var(--color-box-3)'
     }
   },
   shortcuts: {

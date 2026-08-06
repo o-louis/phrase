@@ -3,10 +3,13 @@ import { contexts } from '~/data/contexts'
 import { phrases } from '~/data/phrases'
 
 const route = useRoute()
-const contextId = route.params.id as string
+const store = useReviewStore()
+const { speak } = useSpeech()
 
+const contextId = route.params.id as string
 const context = computed(() => contexts.find(c => c.id === contextId))
 const contextPhrases = computed(() => phrases.filter(p => p.contextId === contextId))
+const dueCount = computed(() => contextPhrases.value.filter(p => store.isDue(p.id)).length)
 
 const revealed = reactive<Record<string, boolean>>({})
 
@@ -14,7 +17,16 @@ function toggleReveal(id: string) {
   revealed[id] = !revealed[id]
 }
 
-const { speak } = useSpeech()
+// Left border tracks how well the phrase is known; neutral until it has been reviewed once.
+function boxClass(phraseId: string) {
+  if (!store.states[phraseId]) return 'border-l-border'
+  const box = store.boxOf(phraseId)
+  if (box === 3) return 'border-l-box-3'
+  if (box === 2) return 'border-l-box-2'
+  return 'border-l-accent'
+}
+
+onMounted(() => store.load())
 </script>
 
 <template>
@@ -23,15 +35,25 @@ const { speak } = useSpeech()
       <span class="inline-block i-ph-arrow-left" /> Back
     </NuxtLink>
 
-    <h1 class="font-heading text-2xl font-semibold flex items-center gap-2">
-      <span :class="context?.icon" class="inline-block text-accent" />
-      {{ context?.label }}
-    </h1>
+    <div class="flex items-center justify-between gap-4">
+      <h1 class="font-heading text-2xl font-semibold flex items-center gap-2">
+        <span :class="context?.icon" class="inline-block text-accent" />
+        {{ context?.label }}
+      </h1>
+      <NuxtLink
+        v-if="dueCount"
+        :to="`/review?context=${contextId}`"
+        class="shrink-0 px-4 py-2 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent-hover transition-colors"
+      >
+        Review {{ dueCount }}
+      </NuxtLink>
+    </div>
 
     <div
       v-for="phrase in contextPhrases"
       :key="phrase.id"
-      class="card p-5 cursor-pointer"
+      class="card border-l-4 p-5 cursor-pointer"
+      :class="boxClass(phrase.id)"
       @click="toggleReveal(phrase.id)"
     >
       <p class="text-lg">
