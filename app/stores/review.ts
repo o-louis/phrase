@@ -1,8 +1,10 @@
 import { defineStore } from 'pinia'
+import { defaultLangPackId, langPacks } from '~/data/langPacks'
 import type { LeitnerBox, ReviewMode, ReviewState } from '~/types/review'
 
 const STORAGE_KEY = 'learn-english:review'
 const MODE_KEY = 'learn-english:mode'
+const LANG_PACK_KEY = 'learn-english:langPack'
 
 // Days a phrase rests in each box before it comes up for review again.
 const INTERVALS: Record<LeitnerBox, number> = { 1: 0, 2: 2, 3: 7 }
@@ -12,6 +14,7 @@ const DAY_MS = 86_400_000
 export const useReviewStore = defineStore('review', () => {
   const states = ref<Record<string, ReviewState>>({})
   const mode = ref<ReviewMode>('production')
+  const langPackId = ref(defaultLangPackId)
   const loaded = ref(false)
 
   function load() {
@@ -27,12 +30,21 @@ export const useReviewStore = defineStore('review', () => {
     }
     const storedMode = localStorage.getItem(MODE_KEY)
     if (storedMode === 'recognition' || storedMode === 'production') mode.value = storedMode
+
+    const storedPack = localStorage.getItem(LANG_PACK_KEY)
+    if (storedPack && langPacks.some(pack => pack.id === storedPack)) langPackId.value = storedPack
+
     loaded.value = true
   }
 
   function setMode(next: ReviewMode) {
     mode.value = next
     if (import.meta.client) localStorage.setItem(MODE_KEY, next)
+  }
+
+  function setLangPack(next: string) {
+    langPackId.value = next
+    if (import.meta.client) localStorage.setItem(LANG_PACK_KEY, next)
   }
 
   function persist() {
@@ -63,5 +75,5 @@ export const useReviewStore = defineStore('review', () => {
     persist()
   }
 
-  return { states, mode, loaded, load, setMode, boxOf, isDue, grade, reset }
+  return { states, mode, langPackId, loaded, load, setMode, setLangPack, boxOf, isDue, grade, reset }
 })

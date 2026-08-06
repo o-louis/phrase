@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { contexts } from '~/data/contexts'
-import { phrases } from '~/data/phrases'
 
 const route = useRoute()
 const store = useReviewStore()
 const { speak } = useSpeech()
+const { langPack, phrasesOf } = useLangPack()
 
 const contextId = route.params.id as string
 const context = computed(() => contexts.find(c => c.id === contextId))
-const contextPhrases = computed(() => phrases.filter(p => p.contextId === contextId))
+const contextPhrases = computed(() => phrasesOf(contextId))
 const dueCount = computed(() => contextPhrases.value.filter(p => store.isDue(p.id)).length)
 
 const revealed = reactive<Record<string, boolean>>({})
@@ -69,7 +69,7 @@ onMounted(() => store.load())
         <button
           class="shrink-0 p-2 rounded-full hover:bg-bg transition-colors"
           aria-label="Écouter la prononciation"
-          @click.stop="speak(phrase.target)"
+          @click.stop="speak(phrase.target, langPack.speechLocale)"
         >
           <span class="inline-block i-ph-speaker-high text-xl" />
         </button>

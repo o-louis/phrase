@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { contexts } from '~/data/contexts'
-import { phrases } from '~/data/phrases'
 import type { Phrase } from '~/types/content'
 import type { ReviewMode } from '~/types/review'
 import type { AnswerCheck } from '~/utils/answer'
@@ -8,6 +7,7 @@ import type { AnswerCheck } from '~/utils/answer'
 const route = useRoute()
 const store = useReviewStore()
 const { speak } = useSpeech()
+const { langPack, packPhrases } = useLangPack()
 
 const contextId = computed(() => route.query.context as string | undefined)
 const context = computed(() => contexts.find(c => c.id === contextId.value))
@@ -57,13 +57,13 @@ function resetCard() {
 function reveal() {
   if (answered.value || !current.value) return
   revealed.value = true
-  speak(current.value.target)
+  speak(current.value.target, langPack.value.speechLocale)
 }
 
 function submit() {
   if (answered.value || !current.value) return
   result.value = checkAnswer(input.value, current.value.target)
-  speak(current.value.target)
+  speak(current.value.target, langPack.value.speechLocale)
 }
 
 /** Gives up on the current phrase: shows the answer and counts it as not known. */
@@ -71,7 +71,7 @@ function giveUp() {
   if (answered.value || !current.value) return
   input.value = ''
   result.value = checkAnswer('', current.value.target)
-  speak(current.value.target)
+  speak(current.value.target, langPack.value.speechLocale)
 }
 
 function answer(known: boolean) {
@@ -102,7 +102,7 @@ function onKeydown(event: KeyboardEvent) {
 
 onMounted(() => {
   store.load()
-  const pool = phrases.filter(
+  const pool = packPhrases.value.filter(
     p => (!contextId.value || p.contextId === contextId.value) && store.isDue(p.id)
   )
   queue.value = shuffle(pool)
@@ -167,7 +167,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
           autocapitalize="off"
           autocorrect="off"
           spellcheck="false"
-          placeholder="Écris la phrase en anglais…"
+          :placeholder="langPack.inputPlaceholder"
           class="w-full px-4 py-3 rounded-lg bg-bg border border-border focus:border-accent outline-none transition-colors"
         >
         <div class="flex gap-3">
@@ -223,7 +223,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
           <button
             class="shrink-0 p-2 rounded-full hover:bg-bg transition-colors"
             aria-label="Écouter la prononciation"
-            @click="speak(current.target)"
+            @click="speak(current.target, langPack.speechLocale)"
           >
             <span class="inline-block i-ph-speaker-high text-xl" />
           </button>

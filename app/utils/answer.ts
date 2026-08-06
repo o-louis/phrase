@@ -13,12 +13,20 @@ export type AnswerCheck = {
 // How many character edits still count as a typo rather than a wrong answer.
 const TYPO_TOLERANCE = 2
 
-/** Case and punctuation shouldn't decide whether an answer counts; apostrophes are kept. */
+/**
+ * Case, punctuation and diacritics shouldn't decide whether an answer counts.
+ * Accents and inverted marks are dropped because a French keyboard can't
+ * reasonably produce á, í, ñ or ¿ — that would test the keyboard, not the
+ * language. The answer is still displayed with its correct spelling.
+ * Apostrophes are kept: they distinguish real words in English.
+ */
 export function normalize(text: string): string {
   return text
     .toLowerCase()
     .replace(/[‘’]/g, "'")
-    .replace(/[.,!?;:"«»…]/g, '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[.,!?¿¡;:"«»…]/g, '')
     .replace(/\s+/g, ' ')
     .trim()
 }

@@ -1,14 +1,8 @@
 <script setup lang="ts">
-import { contexts } from '~/data/contexts'
-import { phrases } from '~/data/phrases'
-
 const store = useReviewStore()
+const { packPhrases, packContexts, phrasesOf } = useLangPack()
 
 onMounted(() => store.load())
-
-function phrasesOf(contextId: string) {
-  return phrases.filter(p => p.contextId === contextId)
-}
 
 function dueCount(contextId: string) {
   return phrasesOf(contextId).filter(p => store.isDue(p.id)).length
@@ -18,7 +12,7 @@ function acquiredCount(contextId: string) {
   return phrasesOf(contextId).filter(p => store.boxOf(p.id) === 3).length
 }
 
-const totalDue = computed(() => phrases.filter(p => store.isDue(p.id)).length)
+const totalDue = computed(() => packPhrases.value.filter(p => store.isDue(p.id)).length)
 </script>
 
 <template>
@@ -42,7 +36,7 @@ const totalDue = computed(() => phrases.filter(p => store.isDue(p.id)).length)
 
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <NuxtLink
-        v-for="context in contexts"
+        v-for="context in packContexts"
         :key="context.id"
         :to="`/context/${context.id}`"
         class="card p-6 flex flex-col items-start gap-3 hover:border-accent transition-colors"
