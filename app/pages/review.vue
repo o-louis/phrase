@@ -5,6 +5,7 @@ import type { ReviewMode } from '~/types/review'
 import type { AnswerCheck } from '~/utils/answer'
 
 const route = useRoute()
+const router = useRouter()
 const store = useReviewStore()
 const { speak } = useSpeech()
 const { langPack, packPhrases } = useLangPack()
@@ -100,7 +101,11 @@ function onKeydown(event: KeyboardEvent) {
   else if (event.key === '2' && answered.value) answer(true)
 }
 
-onMounted(() => {
+onMounted(async () => {
+  // On a prerendered page the query string isn't parsed yet when the component
+  // mounts, so `?context=` would be missed and the session would span every context.
+  await router.isReady()
+
   store.load()
   const pool = packPhrases.value.filter(
     p => (!contextId.value || p.contextId === contextId.value) && store.isDue(p.id)

@@ -1,4 +1,5 @@
 import { APP_NAME } from './app/constants/app'
+import { contexts } from './app/data/contexts'
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -27,6 +28,14 @@ export default defineNuxtConfig({
       { name: 'Fraunces', provider: 'google', weights: [500, 600, 700] },
       { name: 'Plus Jakarta Sans', provider: 'google', weights: [400, 500, 600] }
     ]
+  },
+  // Everything is static data and localStorage progress, so there is nothing to
+  // render per-request: prerender every route instead of shipping a server.
+  nitro: {
+    prerender: {
+      crawlLinks: true,
+      routes: ['/', '/review', ...contexts.map(context => `/context/${context.id}`)]
+    }
   },
   css: ['~/assets/css/main.css']
 })
