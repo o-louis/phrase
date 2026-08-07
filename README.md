@@ -2,6 +2,8 @@
 
 Learn the phrases people actually say, grouped by situation rather than word by word.
 
+**Live:** https://phrasee.netlify.app
+
 Aimed at B2+ learners whose gap isn't grammar or vocabulary but fluency: knowing
 *a* way to say something, yet not the natural one, fast enough for a real
 conversation. Each card is a full contextual sentence, not an isolated word.
@@ -32,17 +34,43 @@ built-in Web Speech API, so audio costs nothing and needs no network call.
 
 ## Development
 
+Install dependencies:
+
 ```bash
 pnpm install
 ```
+
+Start the dev server on `http://localhost:3000`:
 
 ```bash
 pnpm dev
 ```
 
+## Build
+
+The site is fully prerendered — there is no server runtime, so `pnpm generate`
+is the build, not `pnpm build`. Every route is listed in `nitro.prerender.routes`
+in `nuxt.config.ts`, including one per context.
+
 ```bash
-pnpm build
+pnpm generate
 ```
+
+Serve the generated output locally to check it before deploying:
+
+```bash
+npx serve dist
+```
+
+Worth doing: prerendering exposes bugs the dev server hides. Anything reading
+`useRoute().query` on mount must wait for `router.isReady()` first, or the query
+string won't be parsed yet on a prerendered page.
+
+## Deployment
+
+Netlify, configured in `netlify.toml`: `pnpm generate` with `dist` as the publish
+directory. `dist` is a symlink to `.output/public` — publish `dist`, not the
+real path, because Netlify skips dot-prefixed directories and would deploy nothing.
 
 ## Adding content
 
