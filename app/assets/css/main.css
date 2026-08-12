@@ -59,11 +59,24 @@ a {
   text-decoration: none;
 }
 
-button {
+/* Form controls don't inherit font or colour on their own, so without this the
+   input keeps the browser's black text and disappears against the dark theme. */
+button,
+input,
+textarea,
+select {
   appearance: none;
   font: inherit;
   color: inherit;
+}
+
+button {
   background: none;
   border: none;
   cursor: pointer;
+}
+
+::placeholder {
+  color: var(--color-muted);
+  opacity: 1;
 }
