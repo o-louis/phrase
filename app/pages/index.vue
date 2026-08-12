@@ -52,7 +52,7 @@ const totalDue = computed(() => packPhrases.value.filter(p => store.isDue(p.id))
           <span :class="context.icon" class="inline-block text-3xl text-accent" />
           <span
             v-if="dueCount(context.id)"
-            class="text-xs px-2 py-0.5 rounded-full bg-accent text-white"
+            class="text-xs px-2 py-0.5 rounded-full bg-accent-solid text-on-accent"
           >
             {{ dueCount(context.id) }} à revoir
           </span>

@@ -26,7 +26,7 @@ onMounted(() => store.load())
             v-for="pack in langPacks"
             :key="pack.id"
             class="px-2.5 py-1 rounded-md transition-colors"
-            :class="langPack.id === pack.id ? 'bg-accent text-white' : 'text-muted hover:text-text'"
+            :class="langPack.id === pack.id ? 'bg-accent-solid text-on-accent' : 'text-muted hover:text-text'"
             :aria-label="pack.title"
             @click="store.setLangPack(pack.id)"
           >

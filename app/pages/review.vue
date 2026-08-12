@@ -185,7 +185,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
           </button>
           <button
             type="submit"
-            class="flex-1 py-3 rounded-lg bg-accent text-white font-medium hover:bg-accent-hover transition-colors"
+            class="flex-1 py-3 rounded-lg bg-accent-solid text-on-accent font-medium hover:bg-accent-hover transition-colors"
           >
             Valider
           </button>
@@ -220,7 +220,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
               <span
                 v-for="(entry, index) in result.words"
                 :key="index"
-                :class="entry.matched ? 'text-accent' : 'text-learning underline decoration-wavy underline-offset-4'"
+                :class="entry.matched ? '' : 'text-accent underline decoration-wavy underline-offset-4'"
               >{{ entry.word }}{{ index < result.words.length - 1 ? ' ' : '' }}</span>
             </template>
             <span v-else class="text-accent">{{ current.target }}</span>
@@ -238,7 +238,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
       <div class="mt-auto">
         <button
           v-if="store.mode === 'recognition' && !answered"
-          class="w-full py-3 rounded-lg bg-accent text-white font-medium hover:bg-accent-hover transition-colors"
+          class="w-full py-3 rounded-lg bg-accent-solid text-on-accent font-medium hover:bg-accent-hover transition-colors"
           @click="reveal"
         >
           Voir la réponse
@@ -253,7 +253,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
             Je ne savais pas
           </button>
           <button
-            class="py-3 rounded-lg bg-mastered text-white font-medium hover:opacity-90 transition-opacity"
+            class="py-3 rounded-lg bg-mastered text-on-mastered font-medium hover:opacity-90 transition-opacity"
             @click="answer('exact')"
           >
             Je savais
@@ -269,7 +269,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
             Compter comme correct
           </button>
           <button
-            class="flex-1 py-3 rounded-lg bg-accent text-white font-medium hover:bg-accent-hover transition-colors"
+            class="flex-1 py-3 rounded-lg bg-accent-solid text-on-accent font-medium hover:bg-accent-hover transition-colors"
             @click="answer(producedOutcome)"
           >
             Continuer
@@ -287,7 +287,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
       <p class="text-muted">
         {{ total }} {{ total > 1 ? 'phrases révisées' : 'phrase révisée' }}.
       </p>
-      <NuxtLink to="/" class="mt-2 px-4 py-2 rounded-lg bg-accent text-white hover:bg-accent-hover transition-colors">
+      <NuxtLink to="/" class="mt-2 px-4 py-2 rounded-lg bg-accent-solid text-on-accent hover:bg-accent-hover transition-colors">
         Retour aux contextes
       </NuxtLink>
     </div>

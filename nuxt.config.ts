@@ -25,8 +25,7 @@ export default defineNuxtConfig({
   },
   fonts: {
     families: [
-      { name: 'Fraunces', provider: 'google', weights: [500, 600, 700] },
-      { name: 'Plus Jakarta Sans', provider: 'google', weights: [400, 500, 600] }
+      { name: 'Space Grotesk', provider: 'google', weights: [400, 500, 600, 700] }
     ]
   },
   // Everything is static data and localStorage progress, so there is nothing to

@@ -49,7 +49,7 @@ onMounted(() => store.load())
       <NuxtLink
         v-if="dueCount"
         :to="`/review?context=${contextId}`"
-        class="shrink-0 px-4 py-2 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent-hover transition-colors"
+        class="shrink-0 px-4 py-2 rounded-lg bg-accent-solid text-on-accent text-sm font-medium hover:bg-accent-hover transition-colors"
       >
         Réviser {{ dueCount }}
       </NuxtLink>

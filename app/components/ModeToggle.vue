@@ -15,7 +15,7 @@ const options: { value: ReviewMode, label: string }[] = [
       v-for="option in options"
       :key="option.value"
       class="px-3 py-1 rounded-md transition-colors"
-      :class="store.mode === option.value ? 'bg-accent text-white' : 'text-muted hover:text-text'"
+      :class="store.mode === option.value ? 'bg-accent-solid text-on-accent' : 'text-muted hover:text-text'"
       @click="store.setMode(option.value)"
     >
       {{ option.label }}

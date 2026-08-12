@@ -1,29 +1,45 @@
 @unocss all;
 
+/* Riso: flat inks on paper, text in ink blue rather than black.
+   The orange comes in two values on purpose. --color-accent is the fluorescent
+   one, used for marks that sit on paper: icons, the wavy underline, hover
+   borders. --color-accent-solid is a shade deeper and fills buttons and badges,
+   because white on the fluorescent orange only reaches 3.3:1 — deepening the
+   fill buys 4.5:1 while the marks keep their punch. */
 :root {
-  --color-bg: #f5f1e8;
-  --color-surface: #fdfbf7;
-  --color-border: #e6dfd0;
-  --color-text: #2b2723;
-  --color-muted: #7a7266;
-  --color-accent: #c1622f;
-  --color-accent-hover: #a94f22;
-  --color-learning: #c2952f;
-  --color-familiar: #9c9440;
-  --color-mastered: #6b8f5e;
+  --color-bg: #fdf5e8;
+  --color-surface: #fffcf5;
+  --color-border: #cdc6dd;
+  --color-text: #1b1b3a;
+  --color-muted: #6a6a8a;
+  --color-accent: #ff4f00;
+  --color-accent-solid: #de3600;
+  --color-accent-hover: #c22e00;
+  --color-on-accent: #ffffff;
+  --color-on-mastered: #ffffff;
+  /* Darker than the riso ink would suggest: these three are rendered as text on
+     the cream surface (the corrected answer, the "Correct" label), so they need
+     to clear 4.5:1 rather than just look right as a dot. */
+  --color-learning: #a86a00;
+  --color-familiar: #4a56b8;
+  --color-mastered: #0a7d5a;
 }
 
 .dark {
-  --color-bg: #211f1c;
-  --color-surface: #2a2723;
-  --color-border: #3a352e;
-  --color-text: #f0ebe0;
-  --color-muted: #a39b8a;
-  --color-accent: #e2814f;
-  --color-accent-hover: #ee9569;
-  --color-learning: #d9ad4a;
-  --color-familiar: #b8b06a;
-  --color-mastered: #85ab77;
+  --color-bg: #14142a;
+  --color-surface: #1d1d3a;
+  --color-border: #33335c;
+  --color-text: #f1eeff;
+  --color-muted: #9b98c4;
+  --color-accent: #ff6a2b;
+  /* Same fill in both themes: one ink, printed on either paper. */
+  --color-accent-solid: #de3600;
+  --color-accent-hover: #c22e00;
+  --color-on-accent: #ffffff;
+  --color-on-mastered: #14142a;
+  --color-learning: #ffbf3d;
+  --color-familiar: #8f9aff;
+  --color-mastered: #25c793;
 }
 
 /* UnoCSS ships no Tailwind-style preflight: without this, borders don't render
@@ -43,15 +59,17 @@ body {
   margin: 0;
   background-color: var(--color-bg);
   color: var(--color-text);
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Space Grotesk', sans-serif;
   transition:
     background-color 0.2s ease,
     color 0.2s ease;
 }
 
+/* One family for everything: headings separate themselves by weight and tighter
+   tracking, the way a printed poster does. */
 .font-heading {
-  font-family: 'Fraunces', serif;
-  font-optical-sizing: auto;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 a {
