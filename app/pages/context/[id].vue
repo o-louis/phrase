@@ -21,8 +21,9 @@ function toggleReveal(id: string) {
 function boxClass(phraseId: string) {
   if (!store.stateOf(phraseId)) return 'border-l-border'
   const box = store.boxOf(phraseId)
-  if (box === 3) return 'border-l-box-3'
-  if (box === 2) return 'border-l-box-2'
+  if (box === 4) return 'border-l-mastered'
+  if (box === 3) return 'border-l-familiar'
+  if (box === 2) return 'border-l-learning'
   return 'border-l-accent'
 }
 

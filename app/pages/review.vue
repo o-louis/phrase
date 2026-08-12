@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { contexts } from '~/data/contexts'
 import type { Phrase } from '~/types/content'
+import type { ReviewOutcome } from '~/types/review'
 import type { AnswerCheck } from '~/utils/answer'
 
 const route = useRoute()
@@ -25,8 +26,15 @@ const inputEl = ref<HTMLInputElement | null>(null)
 const current = computed(() => queue.value[0])
 const progress = computed(() => (total.value ? (done.value / total.value) * 100 : 0))
 const answered = computed(() => revealed.value || result.value !== null)
-// An answer that is right, or right apart from a typo, still counts as known.
-const gradedAsKnown = computed(() => result.value !== null && result.value.status !== 'incorrect')
+
+// A typo advances the phrase but won't certify it as mastered; only an answer
+// matching the reference does.
+const producedOutcome = computed<ReviewOutcome>(() => {
+  if (result.value?.status === 'correct') return 'exact'
+  if (result.value?.status === 'almost') return 'approximate'
+  return 'failed'
+})
+const gradedAsKnown = computed(() => producedOutcome.value !== 'failed')
 
 function shuffle<T>(items: T[]): T[] {
   const result = [...items]
@@ -79,15 +87,15 @@ function giveUp() {
   speak(current.value.target, langPack.value.speechLocale)
 }
 
-function answer(known: boolean) {
+function answer(outcome: ReviewOutcome) {
   const phrase = current.value
   if (!phrase || !answered.value) return
 
-  store.grade(phrase.id, known)
+  store.grade(phrase.id, outcome)
   queue.value.shift()
   // A missed phrase comes back later in the same session instead of ending it.
-  if (known) done.value++
-  else queue.value.push(phrase)
+  if (outcome === 'failed') queue.value.push(phrase)
+  else done.value++
   resetCard()
 }
 
@@ -97,12 +105,15 @@ function onKeydown(event: KeyboardEvent) {
 
   if (event.key === ' ' || event.key === 'Enter') {
     event.preventDefault()
-    if (answered.value) answer(store.mode === 'production' ? gradedAsKnown.value : true)
+    // Recognition is self-graded, so "I knew it" is the strongest signal it can give.
+    if (answered.value) answer(store.mode === 'production' ? producedOutcome.value : 'exact')
     else if (store.mode === 'recognition') reveal()
     else focusInput()
   }
-  else if (event.key === '1' && answered.value) answer(false)
-  else if (event.key === '2' && answered.value) answer(true)
+  else if (event.key === '1' && answered.value) answer('failed')
+  else if (event.key === '2' && answered.value) {
+    answer(store.mode === 'production' ? 'approximate' : 'exact')
+  }
 }
 
 onMounted(async () => {
@@ -186,16 +197,16 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
         <div v-if="result" class="flex items-center gap-2 text-sm font-medium">
           <span
             :class="[
-              result.status === 'correct' ? 'i-ph-check-circle text-box-3' : '',
-              result.status === 'almost' ? 'i-ph-warning-circle text-box-2' : '',
+              result.status === 'correct' ? 'i-ph-check-circle text-mastered' : '',
+              result.status === 'almost' ? 'i-ph-warning-circle text-learning' : '',
               result.status === 'incorrect' ? 'i-ph-x-circle text-muted' : ''
             ]"
             class="inline-block text-lg"
           />
           <span
             :class="{
-              'text-box-3': result.status === 'correct',
-              'text-box-2': result.status === 'almost',
+              'text-mastered': result.status === 'correct',
+              'text-learning': result.status === 'almost',
               'text-muted': result.status === 'incorrect'
             }"
           >
@@ -209,7 +220,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
               <span
                 v-for="(entry, index) in result.words"
                 :key="index"
-                :class="entry.matched ? 'text-accent' : 'text-box-2 underline decoration-wavy underline-offset-4'"
+                :class="entry.matched ? 'text-accent' : 'text-learning underline decoration-wavy underline-offset-4'"
               >{{ entry.word }}{{ index < result.words.length - 1 ? ' ' : '' }}</span>
             </template>
             <span v-else class="text-accent">{{ current.target }}</span>
@@ -237,13 +248,13 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
         <div v-else-if="answered && store.mode === 'recognition'" class="grid grid-cols-2 gap-3">
           <button
             class="py-3 rounded-lg border border-border hover:border-accent transition-colors"
-            @click="answer(false)"
+            @click="answer('failed')"
           >
             Je ne savais pas
           </button>
           <button
-            class="py-3 rounded-lg bg-box-3 text-white font-medium hover:opacity-90 transition-opacity"
-            @click="answer(true)"
+            class="py-3 rounded-lg bg-mastered text-white font-medium hover:opacity-90 transition-opacity"
+            @click="answer('exact')"
           >
             Je savais
           </button>
@@ -253,13 +264,13 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
           <button
             v-if="!gradedAsKnown"
             class="px-4 py-3 rounded-lg border border-border text-muted hover:border-accent hover:text-text transition-colors"
-            @click="answer(true)"
+            @click="answer('approximate')"
           >
             Compter comme correct
           </button>
           <button
             class="flex-1 py-3 rounded-lg bg-accent text-white font-medium hover:bg-accent-hover transition-colors"
-            @click="answer(gradedAsKnown)"
+            @click="answer(producedOutcome)"
           >
             Continuer
           </button>
@@ -269,7 +280,7 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
 
     <!-- Session finished -->
     <div v-else-if="mounted && total" class="card p-8 flex flex-col items-center gap-3 text-center">
-      <span class="inline-block i-ph-check-circle text-4xl text-box-3" />
+      <span class="inline-block i-ph-check-circle text-4xl text-mastered" />
       <p class="font-heading text-xl">
         Session terminée
       </p>

@@ -1,13 +1,16 @@
 import { defineStore } from 'pinia'
 import { defaultLangPackId, langPacks } from '~/data/langPacks'
-import type { LeitnerBox, ReviewMode, ReviewState } from '~/types/review'
+import type { LeitnerBox, ReviewMode, ReviewOutcome, ReviewState } from '~/types/review'
 
 const STORAGE_KEY = 'learn-english:review'
 const MODE_KEY = 'learn-english:mode'
 const LANG_PACK_KEY = 'learn-english:langPack'
 
 // Days a phrase rests in each box before it comes up for review again.
-const INTERVALS: Record<LeitnerBox, number> = { 1: 0, 2: 2, 3: 7 }
+const INTERVALS: Record<LeitnerBox, number> = { 1: 0, 2: 1, 3: 3, 4: 14 }
+
+/** Reaching this box is what "acquise" means: three successes, the last one exact. */
+const MASTERED_BOX: LeitnerBox = 4
 
 const DAY_MS = 86_400_000
 
@@ -84,6 +87,10 @@ export const useReviewStore = defineStore('review', () => {
     return stateOf(phraseId, forMode)?.box ?? 1
   }
 
+  function isMastered(phraseId: string, forMode: ReviewMode = mode.value): boolean {
+    return boxOf(phraseId, forMode) === MASTERED_BOX
+  }
+
   function isDue(phraseId: string, forMode: ReviewMode = mode.value, now = Date.now()): boolean {
     const state = stateOf(phraseId, forMode)
     if (!state) return true
@@ -91,8 +98,17 @@ export const useReviewStore = defineStore('review', () => {
     return elapsedDays >= INTERVALS[state.box]
   }
 
-  function grade(phraseId: string, known: boolean, forMode: ReviewMode = mode.value) {
-    const box = known ? (Math.min(boxOf(phraseId, forMode) + 1, 3) as LeitnerBox) : 1
+  function nextBox(current: LeitnerBox, outcome: ReviewOutcome): LeitnerBox {
+    // A failure drops to box 1. That reads harsh, but a missed phrase comes back
+    // within the same session, so a lapse really costs two levels, not everything.
+    if (outcome === 'failed') return 1
+    if (outcome === 'exact') return Math.min(current + 1, MASTERED_BOX) as LeitnerBox
+    // Approximate advances but stops one short of mastery, and never demotes.
+    return Math.max(current, Math.min(current + 1, MASTERED_BOX - 1)) as LeitnerBox
+  }
+
+  function grade(phraseId: string, outcome: ReviewOutcome, forMode: ReviewMode = mode.value) {
+    const box = nextBox(boxOf(phraseId, forMode), outcome)
     states.value[stateKey(phraseId, forMode)] = {
       phraseId,
       mode: forMode,
@@ -117,6 +133,7 @@ export const useReviewStore = defineStore('review', () => {
     setLangPack,
     stateOf,
     boxOf,
+    isMastered,
     isDue,
     grade,
     reset

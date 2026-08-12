@@ -8,8 +8,9 @@
   --color-muted: #7a7266;
   --color-accent: #c1622f;
   --color-accent-hover: #a94f22;
-  --color-box-2: #c2952f;
-  --color-box-3: #6b8f5e;
+  --color-learning: #c2952f;
+  --color-familiar: #9c9440;
+  --color-mastered: #6b8f5e;
 }
 
 .dark {
@@ -20,8 +21,9 @@
   --color-muted: #a39b8a;
   --color-accent: #e2814f;
   --color-accent-hover: #ee9569;
-  --color-box-2: #d9ad4a;
-  --color-box-3: #85ab77;
+  --color-learning: #d9ad4a;
+  --color-familiar: #b8b06a;
+  --color-mastered: #85ab77;
 }
 
 /* UnoCSS ships no Tailwind-style preflight: without this, borders don't render

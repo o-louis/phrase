@@ -9,7 +9,7 @@ function dueCount(contextId: string) {
 }
 
 function acquiredCount(contextId: string) {
-  return phrasesOf(contextId).filter(p => store.boxOf(p.id) === 3).length
+  return phrasesOf(contextId).filter(p => store.isMastered(p.id)).length
 }
 
 const totalDue = computed(() => packPhrases.value.filter(p => store.isDue(p.id)).length)
@@ -64,7 +64,7 @@ const totalDue = computed(() => packPhrases.value.filter(p => store.isDue(p.id))
           </span>
           <span class="h-1 rounded-full bg-border overflow-hidden">
             <span
-              class="block h-full bg-box-3 transition-all duration-300"
+              class="block h-full bg-mastered transition-all duration-300"
               :style="{ width: `${(acquiredCount(context.id) / phrasesOf(context.id).length) * 100}%` }"
             />
           </span>
