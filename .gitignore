@@ -18,6 +18,7 @@ logs
 .fleet
 .idea
 .claude
+CLAUDE.md
 
 # Local env files
 .env
