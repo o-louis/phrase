@@ -19,7 +19,7 @@ function toggleReveal(id: string) {
 
 // Left border tracks how well the phrase is known; neutral until it has been reviewed once.
 function boxClass(phraseId: string) {
-  if (!store.states[phraseId]) return 'border-l-border'
+  if (!store.stateOf(phraseId)) return 'border-l-border'
   const box = store.boxOf(phraseId)
   if (box === 3) return 'border-l-box-3'
   if (box === 2) return 'border-l-box-2'
@@ -35,11 +35,16 @@ onMounted(() => store.load())
       <span class="inline-block i-ph-arrow-left" /> Retour
     </NuxtLink>
 
-    <div class="flex items-center justify-between gap-4">
-      <h1 class="font-heading text-2xl font-semibold flex items-center gap-2">
-        <span :class="context?.icon" class="inline-block text-accent" />
-        {{ context?.label }}
-      </h1>
+    <h1 class="font-heading text-2xl font-semibold flex items-center gap-2">
+      <span :class="context?.icon" class="inline-block text-accent" />
+      {{ context?.label }}
+    </h1>
+
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <!-- Counts and card colours are mode-scoped; the mode itself is set on the home page. -->
+      <span class="text-sm text-muted">
+        Mode {{ store.mode === 'production' ? 'écriture' : 'reconnaissance' }}
+      </span>
       <NuxtLink
         v-if="dueCount"
         :to="`/review?context=${contextId}`"

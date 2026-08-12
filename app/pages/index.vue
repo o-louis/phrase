@@ -17,6 +17,13 @@ const totalDue = computed(() => packPhrases.value.filter(p => store.isDue(p.id))
 
 <template>
   <div class="max-w-2xl mx-auto flex flex-col gap-6">
+    <div class="flex flex-col gap-2">
+      <ModeToggle />
+      <p class="text-sm text-muted">
+        La progression est suivie séparément pour chaque mode.
+      </p>
+    </div>
+
     <NuxtLink
       v-if="totalDue"
       to="/review"

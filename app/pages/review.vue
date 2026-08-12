@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { contexts } from '~/data/contexts'
 import type { Phrase } from '~/types/content'
-import type { ReviewMode } from '~/types/review'
 import type { AnswerCheck } from '~/utils/answer'
 
 const route = useRoute()
@@ -42,9 +41,14 @@ function focusInput() {
   nextTick(() => inputEl.value?.focus())
 }
 
-function setMode(next: ReviewMode) {
-  if (store.mode === next) return
-  store.setMode(next)
+/** Each mode has its own due phrases, so switching starts a fresh session. */
+function startSession() {
+  const pool = packPhrases.value.filter(
+    p => (!contextId.value || p.contextId === contextId.value) && store.isDue(p.id)
+  )
+  queue.value = shuffle(pool)
+  total.value = pool.length
+  done.value = 0
   resetCard()
 }
 
@@ -107,13 +111,8 @@ onMounted(async () => {
   await router.isReady()
 
   store.load()
-  const pool = packPhrases.value.filter(
-    p => (!contextId.value || p.contextId === contextId.value) && store.isDue(p.id)
-  )
-  queue.value = shuffle(pool)
-  total.value = pool.length
+  startSession()
   mounted.value = true
-  if (store.mode === 'production') focusInput()
   window.addEventListener('keydown', onKeydown)
 })
 
@@ -129,30 +128,20 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
       <span class="inline-block i-ph-arrow-left" /> Retour
     </NuxtLink>
 
-    <div v-if="mounted && total" class="flex flex-col gap-3">
-      <div class="flex items-center justify-between gap-3">
-        <div class="flex rounded-lg border border-border p-0.5 text-sm">
-          <button
-            v-for="option in (['production', 'recognition'] as ReviewMode[])"
-            :key="option"
-            class="px-3 py-1 rounded-md transition-colors"
-            :class="store.mode === option ? 'bg-accent text-white' : 'text-muted hover:text-text'"
-            @click="setMode(option)"
-          >
-            {{ option === 'production' ? 'Écriture' : 'Reconnaissance' }}
-          </button>
-        </div>
-        <span class="text-sm text-muted">{{ done }} / {{ total }}</span>
+    <div v-if="mounted && total" class="flex flex-col gap-2">
+      <div class="flex items-center justify-between gap-3 text-sm text-muted">
+        <span>
+          {{ context ? context.label : 'Tous les contextes' }}
+          <span class="opacity-60">·</span>
+          {{ store.mode === 'production' ? 'Écriture' : 'Reconnaissance' }}
+        </span>
+        <span>{{ done }} / {{ total }}</span>
       </div>
-
-      <div class="flex flex-col gap-2">
-        <span class="text-sm text-muted">{{ context ? context.label : 'Tous les contextes' }}</span>
-        <div class="h-1.5 rounded-full bg-border overflow-hidden">
-          <div
-            class="h-full bg-accent transition-all duration-300"
-            :style="{ width: `${progress}%` }"
-          />
-        </div>
+      <div class="h-1.5 rounded-full bg-border overflow-hidden">
+        <div
+          class="h-full bg-accent transition-all duration-300"
+          :style="{ width: `${progress}%` }"
+        />
       </div>
     </div>
 

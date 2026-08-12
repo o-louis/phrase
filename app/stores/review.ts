@@ -11,18 +11,41 @@ const INTERVALS: Record<LeitnerBox, number> = { 1: 0, 2: 2, 3: 7 }
 
 const DAY_MS = 86_400_000
 
+/** Progress is per (phrase, mode), so the two skills advance independently. */
+function stateKey(phraseId: string, mode: ReviewMode) {
+  return `${phraseId}:${mode}`
+}
+
 export const useReviewStore = defineStore('review', () => {
   const states = ref<Record<string, ReviewState>>({})
   const mode = ref<ReviewMode>('production')
   const langPackId = ref(defaultLangPackId)
   const loaded = ref(false)
 
+  /**
+   * Entries saved before progress was split per mode have no mode of their own.
+   * They are credited to recognition only: we know some review happened but not
+   * which kind, and under-crediting costs an extra review, whereas over-crediting
+   * would silently lock the learner out of writing practice.
+   */
+  function migrateLegacyStates(stored: Record<string, ReviewState>) {
+    const migrated: Record<string, ReviewState> = {}
+    for (const [key, state] of Object.entries(stored)) {
+      if (state.mode) {
+        migrated[key] = state
+        continue
+      }
+      migrated[stateKey(state.phraseId, 'recognition')] = { ...state, mode: 'recognition' }
+    }
+    return migrated
+  }
+
   function load() {
     if (!import.meta.client || loaded.value) return
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw) {
       try {
-        states.value = JSON.parse(raw)
+        states.value = migrateLegacyStates(JSON.parse(raw))
       }
       catch {
         states.value = {}
@@ -35,6 +58,7 @@ export const useReviewStore = defineStore('review', () => {
     if (storedPack && langPacks.some(pack => pack.id === storedPack)) langPackId.value = storedPack
 
     loaded.value = true
+    persist()
   }
 
   function setMode(next: ReviewMode) {
@@ -52,21 +76,29 @@ export const useReviewStore = defineStore('review', () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(states.value))
   }
 
-  function boxOf(phraseId: string): LeitnerBox {
-    return states.value[phraseId]?.box ?? 1
+  function stateOf(phraseId: string, forMode: ReviewMode = mode.value) {
+    return states.value[stateKey(phraseId, forMode)]
   }
 
-  function isDue(phraseId: string, now = Date.now()): boolean {
-    const state = states.value[phraseId]
+  function boxOf(phraseId: string, forMode: ReviewMode = mode.value): LeitnerBox {
+    return stateOf(phraseId, forMode)?.box ?? 1
+  }
+
+  function isDue(phraseId: string, forMode: ReviewMode = mode.value, now = Date.now()): boolean {
+    const state = stateOf(phraseId, forMode)
     if (!state) return true
     const elapsedDays = (now - new Date(state.lastSeen).getTime()) / DAY_MS
     return elapsedDays >= INTERVALS[state.box]
   }
 
-  function grade(phraseId: string, known: boolean) {
-    const current = boxOf(phraseId)
-    const box = known ? (Math.min(current + 1, 3) as LeitnerBox) : 1
-    states.value[phraseId] = { phraseId, box, lastSeen: new Date().toISOString() }
+  function grade(phraseId: string, known: boolean, forMode: ReviewMode = mode.value) {
+    const box = known ? (Math.min(boxOf(phraseId, forMode) + 1, 3) as LeitnerBox) : 1
+    states.value[stateKey(phraseId, forMode)] = {
+      phraseId,
+      mode: forMode,
+      box,
+      lastSeen: new Date().toISOString()
+    }
     persist()
   }
 
@@ -75,5 +107,18 @@ export const useReviewStore = defineStore('review', () => {
     persist()
   }
 
-  return { states, mode, langPackId, loaded, load, setMode, setLangPack, boxOf, isDue, grade, reset }
+  return {
+    states,
+    mode,
+    langPackId,
+    loaded,
+    load,
+    setMode,
+    setLangPack,
+    stateOf,
+    boxOf,
+    isDue,
+    grade,
+    reset
+  }
 })
